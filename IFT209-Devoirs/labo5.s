@@ -63,48 +63,49 @@ main:
 // - w23 : i
 // - w19 à w21 : temp
 // - w22 : (33-i)*delta
-dechiffrer:
-
+dechiffrer:							// Void dechiffrer()
+									//
 		mov 	w23, 1 			    //
-Boucle : 						    // for (i = 0; i < 32 ; i++) {
-
-Calculw1:
-		// Calcul de w0 decal 4 gauche + w4
+	Boucle : 						// for (i = 0; i < 32 ; i++) {
+									//
+	Calculw1:						//
+// Calcul de w0 decal 4 gauche + w4	//
 		lsl 	w19, w0, 4 			// tmp1 = w0 decal 4 gauche
 		add 	w19, w19, w4 		// w19 += w4
-		// Calcul de (33-i)*delta + w0
+// Calcul de (33-i)*delta + w0		//
 		mov 	w22, 33 			// temp4 = 33
 		sub 	w20, w22, w23 		// temp2 = 33 - i
 		ldr		w22, delta			// temp4 = delta
 		mul	 	w22, w22, w20    	// temp2 = delta*(33-i)
 		add	 	w20, w22, w0 		// temp2 += w0
-		// Calcul de w0 decal 5 droite + w5 	 			//
-		lsr 	w21, w0, 5
-		add 	w21, w21, w5
-		// Calcul final de w1 (premier XOR et soustraction)
-		eor 	w19, w19, w20
-		eor 	w19, w19, w21
-		sub 	w1, w1, w19
-Calculw0:
-		// Calcul de w2 + w1' decal 4 gauche
-		lsl 	w19, w1, 4
-		add	 	w19, w19, w2
-		// Calcul de (33-i)*delta + w1'
-		add 	w20, w22, w1
-		// Calcul de w19 decal 5 droite + w3
-		lsr 	w21, w1, 5
-		add 	w21, w21, w3
-		// Calcul final de w0'
-		eor 	w19, w19, w20
-		eor 	w19, w19, w21
-		sub 	w0, w0, w19
-
-
-		add 	w23, w23, 1
-		cmp		w23, 32
-		b.ls	Boucle
-
-        ret
+// Calcul de w0 decal 5 droite + w5 //
+		lsr 	w21, w0, 5			//décalage logique Droite de 5
+		add 	w21, w21, w5		//Addition w0 et w5
+// Calcul final de w1 				//
+//(premier XOR et soustraction)		//
+		eor 	w19, w19, w20		//
+		eor 	w19, w19, w21		//
+		sub 	w1, w1, w19			//w1' = w1 - résultat de ou exclusif
+	Calculw0:						//
+// Calcul de w2 + w1' decal 4 gauche//
+		lsl 	w19, w1, 4			// décalage logique gauche de 4
+		add	 	w19, w19, w2		// addition w2 et w1
+// Calcul de (33-i)*delta + w0'		//
+		add 	w20, w22, w1		//
+// Calcul de w0 decal 5 droite + w3 //
+		lsr 	w21, w1, 5			//décalage logique Droite de 5
+		add 	w21, w21, w3		//Addition w0 decal 5 droite + w3
+// Calcul final de w0'				//
+		eor 	w19, w19, w20		//
+		eor 	w19, w19, w21		//
+		sub 	w0, w0, w19			// w0' = w0 - résultat de ou exclusif
+									//
+									//
+		add 	w23, w23, 1			// valeur ++
+		cmp		w23, 32				//connecte to boucle si en valeur < 32
+		b.ls	Boucle				//
+									//
+        ret							// } retour vers déclaration du module
 
 
 .section ".rodata"
