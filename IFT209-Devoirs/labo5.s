@@ -63,10 +63,10 @@ main:
 // - w23 : i
 // - w19 à w21 : temp
 // - w22 : (33-i)*delta
-dechiffrer:							// Void dechiffrer()
+dechiffrer:							// Char dechiffrer(w0,w1,w2,w3,w4,w5)
 									//
 		mov 	w23, 1 			    //
-	Boucle : 						// for (i = 0; i < 32 ; i++) {
+	Boucle : 						// do {
 									//
 	Calculw1:						//
 // Calcul de w0 decal 4 gauche + w4	//
@@ -101,11 +101,11 @@ dechiffrer:							// Void dechiffrer()
 		sub 	w0, w0, w19			// w0' = w0 - résultat de ou exclusif
 									//
 									//
-		add 	w23, w23, 1			// valeur ++
-		cmp		w23, 32				//connecte to boucle si en valeur < 32
-		b.ls	Boucle				//
+		add 	w23, w23, 1			// i++
+		cmp		w23, 32				// 	}	
+		b.ls	Boucle				// while ( i <= 32)
 									//
-        ret							// } retour vers déclaration du module
+        ret							// } return
 
 
 .section ".rodata"
