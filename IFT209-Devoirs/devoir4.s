@@ -90,11 +90,85 @@ FinCode0:
 		bl 		printf
 		b 		FinProgramme
 
-code1:
 
-		mov  x23, 0
-		adr	 x19, chaine
-
+code1:								//
+				mov  x23, 0			// i=0
+				adr	 x19, chaine		//
+								//
+		loop1:						//
+			udiv x24,x19,2				// test de valeur pair
+			mul x24, x24,2				//
+								//
+			cmp x19,x24				//
+			b.eq Paire				//
+								//
+		Impaire:					//
+			// le  6e octets de poids faible doit être 0
+			//si il est 1 additionner 0100000
+			//rien fair si il est 0
+			tbnz x19,6,Change-			//
+			bl convertisseur			//
+								//
+		Paire:						//
+			tbz x19,6,Change+			//
+			bl Change+				//
+			bl convertisseur			//
+								//
+		Change+:					// change la bit de signe
+								//
+			add x19,010000				// retire le bit de si
+			bl convertisseur			//
+		Change-:					// change la bit de signe
+			sub x19,010000				// retir le bit de si
+			bl convertisseur			//
+			convertisseur:				//convertie les voyelles et valeur
+			//si  la valeur est code 97 dec /61 hex | code 65 dec /41 hex remplace par code  52 dec /34 (a,A) -> 4
+			cmp x19,97				//
+			b.eq quatre				//
+			cmp x19,65				//
+			b.eq quatre				//
+			//si  la valeur est code 101 dec /65 hex | code 69 dec /45 hex
+			//remplace par code  51 dec /33 (e,E) -> 3
+			cmp x19,101 				//
+			b.eq trois				//
+			cmp x19,69				//
+			b.eq trois				//
+			//si  la valeur est code 105 dec /69 hex | code 73 dec /49 hex
+			//remplace par code  49 dec /31 (i,I) ->1
+			cmp x19,105				//
+			b.eq un					//
+			cmp x19,73				//
+			b.eq un					//
+			//si  la valeur est code 111 dec /6F hex | code 79 dec /4F hex
+			//remplace par code  48 dec /30 (o,O)-> 0
+			cmp x19,111				//
+			b.eq zero				//
+			cmp x19,79				//
+			b.eq zero				//
+			bl testfin				//
+								//
+		quatre:						//
+			mov x19,52				// change la valeur pour 4
+			bl testfin				//
+		trois:						//
+			mov x19,51				// change la valeur pour 3
+			bl testfin				//
+		un:						//
+			mov x19,49				// change la valeur pour 1
+			bl testfin				//
+		zero:						//
+			mov x19,48 				// change la valeur pour 0
+			bl testfin				//
+		testfin:					//
+			cbz x19,printcode1		// test si la dernière valeur est vide
+			ldrb x19, // je suis pas sur ici senser avance la position dans la chaine avant ou après tester 0
+			bl loop1				// go to début de boucle
+		printcode1:
+			adr x0, fmtSortie3 // a modifier
+			mov x1, x23 	//a modifier
+			bl printf
+			b FinProgramme
+		
 
 code2:
 		mov  x23, 0
