@@ -23,8 +23,8 @@ main:										//
         adr     x0, fmtStr					//
         adr     x1, chaine					//
         bl      scanf						//
-		adr x19, chaine						//
-		mov x21, 0							//
+		adr 	x19, chaine					//
+		mov 	x21, 0						//
 // On compte le nombre de caractères dans	//
 // la chaine								//
 cptNbChar:									//
@@ -88,125 +88,117 @@ FinCode0:									//
 		mov 	x1, x22						//
 		bl 		printf						//
 		b 		FinProgramme				//
-											//
-											//
+//==========================================//
+//=================Code1====================//
+//==========================================//
 code1:										//
-				mov  x23, 0					// i=0
-				adr	 x19, chaine			//
+		mov  	x23, 0						// for (i=0; i<chaine.size(), i++)
+		adr		x20, chaine					//
 											//
-		loop1:								//
-			udiv x24,x19,2					// test de valeur pair
-			mul x24, x24,2					//
+loop1:										//
+		ldrb	w19, [x20, x23]				//
+		tbz 	x23, 0, Pair 				//
 											//
-			cmp x19,x24						//
-			b.eq Paire						//
+Impair:										//
+// le  6e bit de poids faible doit	 		//
+//être 0,  sinon additionner 32				//
+		tbnz 	x19, 5, ToMaj				//
+		b 		convertisseur				//
+Pair:										//
+		tbz 	x19, 5, ToMin				//
+		b 		convertisseur				//
 											//
-		Impaire:							//
-// le  6e octets de poids faible doit	 	//
-//être 0 si il est 1 additionner 0100000	//
-//rien fair si il est 0						//
-			tbnz x19,6,Change-				//
-			bl convertisseur				//
+ToMin:										//
+		add 	x19, x19, 32				// change la lettre en min
+		b		convertisseur				//
+ToMaj:										// change la lettre en maj
+		sub 	x19, x19, 32				// retir le bit de si
+		b 		convertisseur				//
+convertisseur:								//convertie les voyelles et valeur
+// Si c'est A ou a (code 65 ou 97) -­>4 	 //
+		cmp 	x19,97						//
+		b.eq 	quatre						//
+		cmp 	x19,65						//
+		b.eq 	quatre						//
+// Si c'est E ou e (code 69 ou 101) -> 3	//
+		cmp 	x19,101 					//
+		b.eq 	trois						//
+		cmp 	x19,69						//
+		b.eq 	trois						//
+// Si c'est I ou i (code 73 ou 105) ->1		//
+		cmp 	x19,105						//
+		b.eq 	un							//
+		cmp 	x19,73						//
+		b.eq 	un							//
+// Si c'est O ou o (code 79 ou 111)	->0 	//
+		cmp 	x19,111						//
+		b.eq 	zero						//
+		cmp 	x19,79						//
+		b.eq 	zero						//
+		b 		testfin						// Si aucune valeur n'est remplacé, on a fini le traitement
 											//
-		Paire:								//
-			tbz x19,6,Change+				//
-			bl Change+						//
-			bl convertisseur				//
-											//
-		Change+:							// change la bit de signe
-											//
-			add x19,010000					// retire le bit de si
-			bl convertisseur				//
-		Change-:							// change la bit de signe
-			sub x19,010000					// retir le bit de si
-			bl convertisseur				//
-			convertisseur:					//convertie les voyelles et valeur
-			//si  la valeur est code 97 dec /61 hex
-			//ou code 65 dec /41 hex remplace
-			//par code  52 dec /34 (a,A) -> 4
-			cmp x19,97						//
-			b.eq quatre						//
-			cmp x19,65						//
-			b.eq quatre						//
-			//si  la valeur est code 101 dec /65 hex | code 69 dec /45 hex
-			//remplace par code  51 dec /33 (e,E) -> 3
-			cmp x19,101 					//
-			b.eq trois						//
-			cmp x19,69						//
-			b.eq trois						//
-			//si  la valeur est code 105 dec /69 hex | code 73 dec /49 hex
-			//remplace par code  49 dec /31 (i,I) ->1
-			cmp x19,105						//
-			b.eq un							//
-			cmp x19,73						//
-			b.eq un							//
-			//si  la valeur est code 111 dec /6F hex | code 79 dec /4F hex
-			//remplace par code  48 dec /30 (o,O)-> 0
-			cmp x19,111						//
-			b.eq zero						//
-			cmp x19,79						//
-			b.eq zero						//
-			bl testfin						//si aucune valeur est remplacer vas a testfin
-											//
-		quatre:								//
-			mov x19,52						// change la valeur pour 4
-			bl testfin						//
-		trois:								//
-			mov x19,51						// change la valeur pour 3
-			bl testfin						//
-		un:									//
-			mov x19,49						// change la valeur pour 1
-			bl testfin						//
-		zero:								//
-			mov x19,48 						// change la valeur pour 0
-			bl testfin						//
-		testfin:							//
-			cbz x19,printcode1				// test si la dernière valeur est vide
-		---	ldrb x19, 	// je suis pas sur ici senser avance la position dans la chaine avant ou après tester 0
-			bl loop1						// go to début de boucle
-		printcode1:							//
-		---	adr x0, fmtSortie3 // a modifier//
-		---	mov x1, x23 	//a modifier	//
-			bl printf						//
-			b FinProgramme					//
-											//
-											//
+quatre:										//
+		mov 	x19,52						// change la valeur pour 4
+		b 		testfin						//
+trois:										//
+		mov 	x19,51						// change la valeur pour 3
+		b 		testfin						//
+un:											//
+		mov 	x19,49						// change la valeur pour 1
+		b 		testfin						//
+zero:										//
+		mov 	x19,48 						// change la valeur pour 0
+		bl 		testfin						//
+testfin:									//
+		strb	w19, [x20, x23] 			//
+		add		x23, x23, 1					//
+		cmp 	x23, x21 					// Si on est arrivé au dernier caractère
+		b.lo 	loop1						// goto début de boucle
+printcode1:									//
+		adr 	x0, fmtSortie5				//
+		adr 	x1, chaine 					//
+		bl 		printf						//
+		adr	 	x0, fmtSortie5				//
+		adr	 	x1, espace					//
+		bl 		printf						//
+		b 		FinProgramme				//
+//==========================================//
+//=================Code2====================//
+//==========================================//
 code2:										//
-		adr	 x19, chaine					//
-		mov x23,0							// i=0
- loop2:		 								// While(tab[i] == 0)
-		cbz x19,traitement 					// tab[i] == 0 (vide) go to  traitement
-		ldr [x19,1]        					// tab[i+1]
-		add x23,x23,1						//i++
-		bl loop2            				//
+		adr	 	x20, chaine					//
+		sub 	x21, x21, 1					//
+		add 	x20, x20, x21				//
+		mov 	x23, 0						// i = 0
+		mov		x24,0						// total = 0
+Boucle2:									//
+		mov 	x19, 0						//
+		ldrb 	w19, [x20]					// x19 = tab[lenght-i]
+		cmp 	x19, 65  					// Si la valeur est >=65, c'est une lettre
+		b.hs 	AtoF						//
 											//
- traitement:								//
-  // la  valeur qui le connecte  == vide 	//
- //alors avant le traitement -1 avant de commencer
-	-- Manque sub							// tab[i-1]
-	cmp x0,65  								// >= 65
-	b.hs AtoF								//
+		sub 	x19,x19,48					//	code de chiffre - 48 ={0,1,...,9}
+		b 		CalculTotal					//
+AtoF:										//
+		sub  	x19 ,x19, 55				//  code de chiffre - 55 ={10,11,...,15}
+CalculTotal:								//
+		mov 	x22, 4 						//
+		mul 	x22, x23, x22				//
+		lsl		x19, x19, x22				// x19 = x19*(2^(i*4))
+		add 	x24, x24, x19				// total += x19
 											//
-	sub x19,x19,48							//	code de chiffre - 48 ={0,1,...,9}
-	bl Accumulateur							//
-											//
- AtoF:										//
-	sub  x19 ,x19, 55						//  code de chiffre - 55 ={10,11,...,15}
-											//
- Accumulateur:								//
-											//
-		add x20,x20,x19						// additionne la valeur tab[0] ... tab[i-1]
-		cmp x23,0  							// si t[actuel] == t[0]
-		sub x23,x23,1						//
-		b.eq FinCode2						// go to print
- 		bl traitement 						// go to traitement
- FinCode2:									//
- 		adr x0, fmtSortie2					//
- 		mov x1, x23							//
+		add		x23, x23, 1					//
+		sub		x20, x20, 1					//
+		cmp		x23, x21					//
+		b.ls 	Boucle2						//
+FinCode2:									//
+ 		adr x0, fmtSortie0					//
+ 		mov x1, x24							//
  		bl printf							//
  		b FinProgramme						//
-											//
-											//
+//==========================================//
+//=================Code3====================//
+//==========================================//
 code3:										//
 		mov  	x23, 0						//
 		mov  	x25, x21					//
@@ -237,7 +229,9 @@ FinCode3:									//
 		mov x1, x23							//
 		bl printf							//
 		b FinProgramme						//
-// Code 4									//
+//==========================================//
+//=================Code4====================//
+//==========================================//
 code4:										//
 		mov  x23, 0							//
 		adr	 x19, chaine					//
@@ -260,7 +254,9 @@ Boucle4 :									//
 											//
 		cmp  	x23, x21					//
 		b.lo 	Boucle4						//
-											//
+//==========================================//
+//=================Code5====================//
+//==========================================//
 code5:										//
 // Stockage d'un caractère d'espace			//
 		mov 	x24, 10						//
@@ -299,9 +295,6 @@ Imprimer :									//
 											//
 		adr 	x0, fmtSortie5				//
 		adr 	x1, chaine					//
-		bl 		printf						//
-		adr	 	x0, fmtSortie5				//
-		adr	 	x1, espace					//
 		bl 		printf						//
 		b 		FinCode5					//
 	Boucle5 :								//
@@ -344,6 +337,6 @@ espace: 		.skip 	8
 fmtStr:         .asciz  "%[^\n]s"
 fmtOpcode:     	.asciz  "%lu"
 fmtChar : 		.asciz 	"%c"
-fmtSortie3: 	.asciz  "%ld"
 fmtSortie0: 	.asciz  "%lu"
-fmtSortie5: 	.asciz  "%s"
+fmtSortie3: 	.asciz  "%ld"
+fmtSortie5: 	.asciz  "%s\n"
