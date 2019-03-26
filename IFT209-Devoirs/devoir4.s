@@ -52,8 +52,9 @@ lireCodeOp:									//
 		b.eq 	code4						//
 		cmp 	x20, 5						//
 		b.eq 	code5						//
-											//
-											//
+//==========================================//
+//=================Code1====================//
+//==========================================//
 // Registres								//
 // -- x19 : adresse chaine					//
 // -- x21 : nombre de caractères			//
@@ -62,11 +63,11 @@ code0:										//
 		adr 	x19, chaine					//
 determineLongueur :							//
 		ldrb 	w20, [x19]					//
+		cbz 	x20, FinCode0				//
 		tbz 	w20, 7, UnOctet				//
 		tbz 	w20, 5, DeuxOctets			//
 		tbz 	w20, 4, TroisOctets			//
 		tbz 	w20, 3, QuatreOctets		//
-											//
 UnOctet:									//
 		add 	x19, x19, 1					//
 		b 		FinBoucle					//
@@ -81,8 +82,7 @@ QuatreOctets:								//
 		b 		FinBoucle					//
 FinBoucle:									//
 		add 	x22, x22, 1					//
-		cmp 	x22, x21					//
-		b.lo 	determineLongueur			//
+		b		determineLongueur			//
 FinCode0:									//
 		adr 	x0, fmtSortie0				//
 		mov 	x1, x22						//
@@ -98,7 +98,6 @@ code1:										//
 loop1:										//
 		ldrb	w19, [x20, x23]				//
 		tbz 	x23, 0, Pair 				//
-											//
 Impair:										//
 // le  6e bit de poids faible doit	 		//
 //être 0,  sinon additionner 32				//
@@ -107,7 +106,6 @@ Impair:										//
 Pair:										//
 		tbz 	x19, 5, ToMin				//
 		b 		convertisseur				//
-											//
 ToMin:										//
 		add 	x19, x19, 32				// change la lettre en min
 		b		convertisseur				//
@@ -136,7 +134,6 @@ convertisseur:								//convertie les voyelles et valeur
 		cmp 	x19,79						//
 		b.eq 	zero						//
 		b 		testfin						// Si aucune valeur n'est remplacé, on a fini le traitement
-											//
 quatre:										//
 		mov 	x19,52						// change la valeur pour 4
 		b 		testfin						//
@@ -206,14 +203,12 @@ code3:										//
 Boucle3:									//
 		ldrb 	w20, [x19]					//
 		cmp	 	w20, 48						//
-		b.eq 	FinBoucle3					//
+		b.eq 	FinBoucle3					//	Si c'est zéro, on ignore
 											//
-		sub 	x24, x21, 1					//
+		sub 	x24, x21, 1					// On calcule la puissance de 2 courante
 		mov 	x22, 1						//
-		lsl	 	x22, x22, x24				//
-		add 	x23, x23, x22				//
-											//
-											//
+		lsl	 	x22, x22, x24				// On la calcule et on l'aditionne
+		add 	x23, x23, x22				//  aux précédentes
 FinBoucle3:									//
 		sub 	x21, x21, 1					//
 		cmp 	x21, 0						//
@@ -235,18 +230,34 @@ FinCode3:									//
 code4:										//
 		mov  x23, 0							//
 		adr	 x19, chaine					//
-// On change la prochaine valeur en mémoire	//
+// On charge la prochaine valeur en mémoire	//
 // et on lui applique la décryption l fois	//
 Boucle4 :									//
+		mov 	x20, 0						//
 		ldrb 	w20, [x19], 1				//
-		cbz w20, 	FinProgramme			//
-		// On effectue la rotation inverse	//
-		lsl 	x24, x20, 61				//
-		lsr 	x20, x20, 3					//
-		orr 	x20, x20, x24, lsr 56		//
-// On recule de 7 positions dans l'alphabet	//
-		sub 	x20, x20, 7					//
+											//
+// On garde les 5 derniers bits dans x24  	//
+		lsl 	x24, x20, 59				//
+		lsr		x24, x24, 59				//
+// On garde les 3premiers bits dans x20  	//
+		sub 	x20, x20, x24				//
+// On fait la rotation inverse des 5 bits	//
+		lsr 	x25, x24, 3					//
+		lsl		x24, x24, 61				//
+		lsr		x24, x24, 59 				//
+		add		x24, x24, x25				//
+// On regroupe les 3 et 5 bits				//
+		add  	x20, x24, x20				//
+// On recule circulairement 				//
+// de 7 positions dans l'alphabet			//
+		cmp		x20, 72 					//Si la lettre est apres G
+		b.lo 	AtoG						//on recule simplement de 7
+		sub 	x20, x20, 7					// positions. Sinon, on
+		b		Print4						// avance de 19 positions.
+AtoG:										//
+		add		x20, x20, 19				//
 // On imprime un à un les caractères résultants	//
+Print4:
 		adr 	x0, fmtChar					//
 		mov 	x1, x20						//
 		bl 		printf						//
@@ -254,6 +265,7 @@ Boucle4 :									//
 											//
 		cmp  	x23, x21					//
 		b.lo 	Boucle4						//
+		b 		FinProgramme				//
 //==========================================//
 //=================Code5====================//
 //==========================================//
@@ -316,7 +328,7 @@ Imprimer :									//
 	FinBoucle5 :							//
 		add 	x22, x22, 1					//
 		cmp 	x22, x21					//
-		b.lo 	Boucle5						//
+		b.ls 	Boucle5						//
 FinCode5:									//
 RESTORE										//
 		ret									//
@@ -339,4 +351,4 @@ fmtOpcode:     	.asciz  "%lu"
 fmtChar : 		.asciz 	"%c"
 fmtSortie0: 	.asciz  "%lu"
 fmtSortie3: 	.asciz  "%ld"
-fmtSortie5: 	.asciz  "%s\n"
+fmtSortie5: 	.asciz  "%s "
